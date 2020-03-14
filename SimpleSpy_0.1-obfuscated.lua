@@ -905,7 +905,6 @@ if not _G.SimpleSpyExecuted then
     _G.SimpleSpyExecuted = true
 else
     ScreenGui:Destroy()
-    collectgarbage()
 end
 
 ----- ADD ONS ----- (easily add or remove additonal functionality to the RemoteSpy!)
