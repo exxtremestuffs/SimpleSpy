@@ -1174,28 +1174,8 @@ end
 -- main
 if not _G.SimpleSpyExecuted then
     local succeeded, err = pcall(function()
-        _G.SimpleSpyShutdown = shutdown
-        ContentProvider:PreloadAsync({topbar, eTemplate, fTemplate, functionTemplate})
-        functionTemplate.Parent = nil
-        fTemplate.Parent = nil
-        eTemplate.Parent = nil
-        codebox.Text = ""
-        topbar.InputBegan:Connect(onBarInput)
-        minimize.MouseButton1Click:Connect(toggleMinimize)
-        suck.MouseButton1Click:Connect(toggleSideTray)
-        methodToggle.MouseButton1Click:Connect(onToggleButtonClick)
-        remoteHandlerEvent.Event:Connect(bindableHandler)
-        codebox:GetPropertyChangedSignal("Text"):Connect(updateCodebox)
-        codebox.FocusLost:Connect(onDeselect)
-        codebox:GetPropertyChangedSignal("CursorPosition"):Connect(onCursorPosChange)
-        connectResize()
-        onToggleButtonClick()
-        _G.EndTweenSize, _G.EndTweenPos = UDim2.new(0, main.AbsoluteSize.X + side.AbsoluteSize.X, 0, main.AbsoluteSize.Y + 22), UDim2.new(0, main.AbsolutePosition.X, 0, main.AbsolutePosition.Y - 11)
-        loadstring(game:HttpGet("https://pastebin.com/raw/ued7aEsJ"))()
-        wait(1)
-        ScreenguiS.Enabled = true
-        main.Position = UDim2.new(0, main.AbsolutePosition.X, 0, main.AbsolutePosition.Y)
-        coroutine.wrap(function() wait(1) toggleSideTray(true) end)()
+        rconsoleprint("Apologies for the inconvenience, SimpleSpy is currently unavailable! @exxtremewa#9394 is hard at work getting things back up and running.")
+        rconsolename = "SimpleSpy Error"
     end)
     if succeeded then
         _G.SimpleSpyExecuted = true
