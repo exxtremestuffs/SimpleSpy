@@ -361,6 +361,10 @@ local normalSizeM, minSizeM = main.Size, UDim2.new(0, main.Size.X.Offset, 0, 0)
 local lastCursorPos, cursorPos = 0, 0
 --- the maximum amount of remotes allowed in logs
 _G.SIMPLESPYCONFIG_MaxRemotes = 500
+--- the current amount of tasks in the scheduler
+local tasks = 0
+--- this bindable is fired whenever the task queue updates
+local tasksUpdate = Instance.new("BindableEvent")
 
 -- functions
 
@@ -1061,6 +1065,36 @@ function tableToString(t, level, parentTable)
     return out
 end
 
+-- --- Adds a function to the task scheduler, must run in coroutine
+-- function scheduleFunction(f, name)
+--     tasks = tasks + 1
+--     name = name .. "_" .. tostring(tasks)
+--     if tasks > 999 then
+--         rconsolewarn("Unable to schedule task " .. name .. ", too many tasks in queue (999+).")
+--         rconsolename = "SimpleSpy Error Console"
+--         return
+--     end
+--     local queue = tasks
+--     local connection
+--     connection = tasksUpdate.Event:Connect(function(reason)
+--         if tasks <= 0 then
+--             tasks = 1
+--         end
+--         if reason == "finished" then
+--             queue = queue - 1
+--         end
+--         if queue <= 1 then
+--             print(name)
+--             pcall(f)
+--             RunService.RenderStepped:Wait()
+--             tasks = tasks - 1
+--             tasksUpdate:Fire("finished")
+--             connection:Disconnect()
+--         end
+--     end)
+--     tasksUpdate:Fire("added")
+-- end
+
 --- Handles remote logs
 function remoteHandler(hookfunction, methodName, remote, args, script, func)
     if methodName == "FireServer" and not blacklisted(remote) then
@@ -1125,21 +1159,21 @@ function toggleSpy()
     if not toggle then
         originalEvent = hookfunction(remoteEvent.FireServer, function(...) if hookRemote("FireServer", ...) then return originalEvent(...) end end)
         originalFunction = hookfunction(remoteFunction.InvokeServer, function(...) if hookRemote("InvokeServer", ...) then return originalFunction(...) end end)
-        gm.__namecall = function(...)
+        gm.__namecall = newcclosure(function(...)
             local args = {...}
             local remote = args[1]
             local methodName = getnamecallmethod()
             if methodName == "InvokeServer" or methodName == "FireServer" then
-                local script = rawget(getfenv(2), "script")
-                local func = debug.getinfo(2).func
-                remoteHandler(false, methodName, remote, args, script, func)
+                local script = rawget(getfenv(3), "script")
+                local func = debug.getinfo(3).func
+                coroutine.wrap(function() remoteHandler(false, methodName, remote, args, script, func) end)()
             end
             if (methodName == "InvokeServer" or methodName == "FireServer") and blocked(remote) then
                 return nil
             else
                 return original(...)
             end
-        end
+        end)
     else
         hookfunction(remoteEvent.FireServer, originalEvent)
         hookfunction(remoteFunction.InvokeServer, originalFunction)
@@ -1174,14 +1208,34 @@ end
 -- main
 if not _G.SimpleSpyExecuted then
     local succeeded, err = pcall(function()
-        rconsoleprint("Apologies for the inconvenience, SimpleSpy is currently unavailable!\n@exxtremewa#9394 is hard at work getting things back up and running.\n\nWe'll keep you updated as a fix is in progress...\nUPDATE 4/7/20: Reworking namecalling framework in order to fix (unhelpful) errors")
-        rconsolename = "SimpleSpy Error"
+        _G.SimpleSpyShutdown = shutdown
+        ContentProvider:PreloadAsync({topbar, eTemplate, fTemplate, functionTemplate})
+        functionTemplate.Parent = nil
+        fTemplate.Parent = nil
+        eTemplate.Parent = nil
+        codebox.Text = ""
+        topbar.InputBegan:Connect(onBarInput)
+        minimize.MouseButton1Click:Connect(toggleMinimize)
+        suck.MouseButton1Click:Connect(toggleSideTray)
+        methodToggle.MouseButton1Click:Connect(onToggleButtonClick)
+        remoteHandlerEvent.Event:Connect(bindableHandler)
+        codebox:GetPropertyChangedSignal("Text"):Connect(updateCodebox)
+        codebox.FocusLost:Connect(onDeselect)
+        codebox:GetPropertyChangedSignal("CursorPosition"):Connect(onCursorPosChange)
+        connectResize()
+        onToggleButtonClick()
+        _G.EndTweenSize, _G.EndTweenPos = UDim2.new(0, main.AbsoluteSize.X + side.AbsoluteSize.X, 0, main.AbsoluteSize.Y + 22), UDim2.new(0, main.AbsolutePosition.X, 0, main.AbsolutePosition.Y - 11)
+        loadstring(game:HttpGet("https://pastebin.com/raw/ued7aEsJ"))()
+        wait(1)
+        ScreenguiS.Enabled = true
+        main.Position = UDim2.new(0, main.AbsolutePosition.X, 0, main.AbsolutePosition.Y)
+        coroutine.wrap(function() wait(1) toggleSideTray(true) end)()
     end)
     if succeeded then
         _G.SimpleSpyExecuted = true
     else
         rconsoleprint("A fatal error has occured, SimpleSpy was unable to launch properly.\nPlease DM this error message to @exxtremewa#9394:\n\n" .. tostring(err))
-        rconsolename = "SimpleSpy Error"
+        rconsolename = "SimpleSpy Error Console"
         ScreenguiS:Destroy()
         hookfunction(remoteEvent.FireServer, originalEvent)
         hookfunction(remoteFunction.InvokeServer, originalFunction)
@@ -1245,7 +1299,7 @@ newButton(
     "Click to copy the path of the source script",
     function(button)
         local orText = "Click to copy the path of the source script"
-        syn.write_clipboard(typeToString(selected.Source))
+        setclipboard(typeToString(selected.Source))
         button.Text = "Copied!"
         wait(3)
         button.Text = orText
