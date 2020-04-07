@@ -1174,7 +1174,7 @@ end
 -- main
 if not _G.SimpleSpyExecuted then
     local succeeded, err = pcall(function()
-        rconsoleprint("Apologies for the inconvenience, SimpleSpy is currently unavailable! @exxtremewa#9394 is hard at work getting things back up and running.")
+        rconsoleprint("Apologies for the inconvenience, SimpleSpy is currently unavailable!\n@exxtremewa#9394 is hard at work getting things back up and running.\n\nWe'll keep you updated as a fix is in progress...\nUPDATE 4/7/20: Reworking namecalling framework in order to fix (unhelpful) errors")
         rconsolename = "SimpleSpy Error"
     end)
     if succeeded then
