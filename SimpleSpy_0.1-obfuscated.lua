@@ -1,2 +1,2 @@
-game:GetService("StarterGui"):SetCore("SendNotification", "LOADSTRING OUTDATED!", "The loadstring you are using is outdated! Please get the updated one from V3rmillion.")
+print("This loadstring is outdated! Please get the new one from V3rmillion asap!")
 loadstring(game:HttpGet("https://raw.githubusercontent.com/exxtremestuffs/SimpleSpySource/master/SimpleSpy.lua"))()
